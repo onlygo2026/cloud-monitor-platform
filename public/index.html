@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>云监控调度平台</title>
+<style>
+/* ── 全局 ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1677ff;--blue-light:#e6f0ff;--green:#07c160;
+  --red:#fa5151;--orange:#fa8c16;--gray:#f5f6f7;
+  --text:#1a1a1a;--text2:#666;--border:#e8e8e8;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+body{font-family:'PingFang SC','Helvetica Neue',Arial,sans-serif;background:#f0f2f5;color:var(--text);min-height:100vh;}
+.hidden{display:none!important;}
+
+/* ── 顶部导航 ── */
+.navbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:56px;
+  box-shadow:0 2px 8px rgba(22,119,255,.3);
+}
+.navbar .title{font-size:17px;font-weight:600;letter-spacing:.5px;}
+.navbar .nav-right{display:flex;align-items:center;gap:12px;}
+.navbar .user-name{font-size:13px;opacity:.9;}
+.btn-nav{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;}
+.btn-nav:active{background:rgba(255,255,255,.3);}
+
+/* ── 标签栏 ── */
+.tabbar{
+  display:flex;background:#fff;border-top:1px solid var(--border);
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  box-shadow:0 -2px 8px rgba(0,0,0,.06);
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 0;cursor:pointer;transition:.2s;color:var(--text2);
+  font-size:11px;gap:3px;
+}
+.tab-item.active{color:var(--blue);}
+.tab-icon{font-size:22px;line-height:1;}
+
+/* ── 主内容区 ── */
+.main{padding:12px 12px 80px;max-width:600px;margin:0 auto;}
+
+/* ── 卡片 ── */
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.card-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.card-title .dot{width:4px;height:16px;background:var(--blue);border-radius:2px;display:inline-block;}
+
+/* ── 表单 ── */
+.form-item{margin-bottom:14px;}
+.form-label{font-size:13px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.form-label .required{color:var(--red);font-size:12px;}
+.form-input, .form-select, .form-textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+  font-size:14px;color:var(--text);outline:none;transition:.2s;background:#fff;
+  font-family:inherit;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(22,119,255,.1);}
+.form-textarea{min-height:70px;resize:vertical;line-height:1.6;}
+.form-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+
+/* ── 按钮 ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:0 20px;height:44px;border-radius:8px;font-size:15px;font-weight:500;
+  border:none;cursor:pointer;transition:.2s;width:100%;
+}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:#0958d9;}
+.btn-success{background:var(--green);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-default{background:var(--gray);color:var(--text);}
+.btn-sm{height:34px;font-size:13px;padding:0 14px;width:auto;border-radius:6px;}
+
+/* ── 登录页 ── */
+#loginPage{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(160deg,#1677ff 0%,#0958d9 50%,#6b21a8 100%);
+}
+.login-box{width:100%;max-width:380px;background:#fff;border-radius:20px;padding:32px 24px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo .logo-icon{font-size:48px;display:block;margin-bottom:8px;}
+.login-logo h1{font-size:20px;font-weight:700;color:var(--text);}
+.login-logo p{font-size:13px;color:var(--text2);margin-top:4px;}
+.login-box .form-item{margin-bottom:16px;}
+.login-footer{text-align:center;margin-top:16px;font-size:12px;color:rgba(255,255,255,.7);}
+
+/* ── 状态标签 ── */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:12px;font-weight:500;}
+.tag-success{background:#e8f5e9;color:#2e7d32;}
+.tag-warning{background:#fff8e1;color:#f57c00;}
+.tag-danger{background:#fce4ec;color:#c62828;}
+.tag-info{background:var(--blue-light);color:var(--blue);}
+.tag-gray{background:var(--gray);color:var(--text2);}
+
+/* ── 日报表格 ── */
+.report-header{
+  background:linear-gradient(135deg,#1677ff,#0958d9);
+  color:#fff;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;
+}
+.report-header h2{font-size:18px;font-weight:700;letter-spacing:1px;}
+.report-header p{font-size:13px;opacity:.9;margin-top:4px;}
+
+.company-card{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+.company-header{
+  background:linear-gradient(90deg,#1677ff,#4096ff);color:#fff;
+  padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+}
+.company-name{font-size:14px;font-weight:600;}
+.company-meta{font-size:12px;opacity:.85;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.info-item{padding:10px 14px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.info-item:nth-child(2n){border-right:none;}
+.info-item:nth-last-child(-n+2){border-bottom:none;}
+.info-item.full-width{grid-column:1/-1;border-right:none;}
+.info-key{font-size:11px;color:var(--text2);margin-bottom:3px;}
+.info-val{font-size:13px;color:var(--text);line-height:1.5;word-break:break-all;}
+.info-val.abnormal{color:var(--red);font-weight:500;}
+
+/* ── 空状态 ── */
+.empty{text-align:center;padding:48px 24px;color:var(--text2);}
+.empty .empty-icon{font-size:48px;display:block;margin-bottom:12px;}
+.empty p{font-size:14px;}
+
+/* ── 进度条 ── */
+.progress-bar{height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:.5s;}
+
+/* ── toast ── */
+#toast{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:24px;
+  font-size:14px;z-index:9999;transition:.3s;opacity:0;pointer-events:none;
+  white-space:nowrap;max-width:90%;
+}
+#toast.show{opacity:1;}
+
+/* ── 加载 ── */
+.spinner{
+  width:36px;height:36px;border:3px solid var(--blue-light);border-top-color:var(--blue);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap{padding:40px;text-align:center;}
+
+/* ── 分割线 ── */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ── 通知栏 ── */
+.notice-bar{
+  background:#fffbe6;border:1px solid #ffe58f;color:#d48806;
+  border-radius:8px;padding:10px 14px;font-size:13px;
+  display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;
+}
+.notice-bar .icon{flex-shrink:0;margin-top:1px;}
+
+/* 打印样式 */
+@media print {
+  .navbar,.tabbar,.btn,.no-print{display:none!important;}
+  .main{padding:0;}
+  body{background:#fff;}
+}
+
+/* ── 响应式 ── */
+@media(max-width:360px){.info-grid{grid-template-columns:1fr;}.info-item{border-right:none;}}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ════════════ 登录页 ════════════ -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="logo-icon">🏢</span>
+      <h1>云监控调度平台</h1>
+      <p>大连尊远投资 · 信息报送系统</p>
+    </div>
+    <div class="form-item">
+      <div class="form-label">账号</div>
+      <input type="text" id="loginUsername" class="form-input" placeholder="请输入账号" autocomplete="username">
+    </div>
+    <div class="form-item">
+      <div class="form-label">密码</div>
+      <input type="password" id="loginPassword" class="form-input" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+  </div>
+  <p class="login-footer">© 2024 大连尊远投资有限公司 · 内部系统</p>
+</div>
+
+<!-- ════════════ 主应用（登录后显示）════════════ -->
+<div id="app" class="hidden">
+
+  <!-- 顶部导航 -->
+  <div class="navbar">
+    <div class="title">☁️ 云监控调度平台</div>
+    <div class="nav-right">
+      <span class="user-name" id="navUserName"></span>
+      <button class="btn-nav" onclick="showPage('settingsPage')">⚙️</button>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main" id="mainContent">
+    <!-- 动态内容 -->
+  </div>
+
+  <!-- 底部标签栏（根据角色显示不同标签）-->
+  <div class="tabbar" id="tabbar"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// 状态管理
+// ════════════════════════════════════════════════
+let state = {
+  token: localStorage.getItem('token') || '',
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  currentTab: 'submit',
+  currentDate: todayStr(),
+};
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-token': state.token,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return res.json();
+}
+
+// ════════════════════════════════════════════════
+// Toast
+// ════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, duration = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ════════════════════════════════════════════════
+// 登录
+// ════════════════════════════════════════════════
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!username || !password) return toast('请输入账号和密码');
+  const data = await api('POST', '/api/login', { username, password });
+  if (data.ok) {
+    state.token = data.token;
+    state.user = data.user;
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    initApp();
+  } else {
+    toast(data.msg || '登录失败');
+  }
+}
+
+async function doLogout() {
+  await api('POST', '/api/logout');
+  state.token = '';
+  state.user = null;
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  toast('已退出登录');
+}
+
+// Enter登录
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ════════════════════════════════════════════════
+// 初始化 App
+// ════════════════════════════════════════════════
+function initApp() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('navUserName').textContent = state.user.name + ' · ' + (state.user.role === 'admin' ? '管理员' : state.user.role === 'duty' ? '值班长' : '报送员');
+  renderTabbar();
+  const isAdmin = state.user.role === 'admin' || state.user.role === 'duty';
+  state.currentTab = isAdmin ? 'overview' : 'submit';
+  switchTab(state.currentTab);
+}
+
+// 启动时检查登录状态
+async function checkLogin() {
+  if (state.token) {
+    const data = await api('GET', '/api/me');
+    if (data.ok) {
+      state.user = data.user;
+      localStorage.setItem('user', JSON.stringify(data.user));
+      initApp();
+    } else {
+      state.token = '';
+      localStorage.removeItem('token');
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+// 标签栏
+// ════════════════════════════════════════════════
+function renderTabbar() {
+  const isAdmin = state.user.role === 'admin' || state.user.role === 'duty';
+  const tabs = isAdmin
+    ? [
+        { id: 'overview', icon: '📊', label: '日报总览' },
+        { id: 'daily',    icon: '📅', label: '历史记录' },
+        { id: 'mgmt',     icon: '👥', label: '账号管理' },
+        { id: 'settings', icon: '⚙️',  label: '设置' },
+      ]
+    : [
+        { id: 'submit',   icon: '📝', label: '填报信息' },
+        { id: 'history',  icon: '📋', label: '我的记录' },
+        { id: 'settings', icon: '⚙️',  label: '设置' },
+      ];
+
+  document.getElementById('tabbar').innerHTML = tabs.map(t => `
+    <div class="tab-item ${state.currentTab === t.id ? 'active' : ''}" onclick="switchTab('${t.id}')">
+      <span class="tab-icon">${t.icon}</span>
+      <span>${t.label}</span>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  state.currentTab = tab;
+  renderTabbar();
+  const pages = {
+    submit: renderSubmitPage,
+    history: renderHistoryPage,
+    overview: renderOverviewPage,
+    daily: renderDailyPage,
+    mgmt: renderMgmtPage,
+    settings: renderSettingsPage,
+  };
+  if (pages[tab]) pages[tab]();
+}
+
+function showPage(page) { switchTab(page); }
+
+// ════════════════════════════════════════════════
+// 页面：报送员 - 填报信息
+// ════════════════════════════════════════════════
+async function renderSubmitPage() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+
+  const res = await api('GET', '/api/report/mine?date=' + todayStr());
+  const existing = res.report;
+  const company = state.user.company;
+
+  // 根据公司类型渲染不同的表单字段
+  const fields = getCompanyFields(company);
+
+  main.innerHTML = `
+    <div class="notice-bar">
+      <span class="icon">ℹ️</span>
+      <span>今日（${todayStr()}）| 报送单位：<strong>${company}</strong></span>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>今日信息填报</div>
+      ${existing ? `<div style="margin-bottom:12px"><span class="tag tag-success">✅ 已报送</span> <span style="font-size:12px;color:#999">提交于 ${formatTime(existing.submittedAt)}</span></div>` : `<div style="margin-bottom:12px"><span class="tag tag-warning">⏳ 未报送</span></div>`}
+      <form id="reportForm">
+        ${fields.map(f => renderFormField(f, existing)).join('')}
+        <button type="button" class="btn btn-primary" onclick="submitReport()">
+          ${existing ? '📝 更新报送' : '📤 提交报送'}
+        </button>
+      </form>
+    </div>
+  `;
+}
+
+function getCompanyFields(company) {
+  const base = [
+    { key: 'abnormal', label: '异常情况', type: 'select', required: true,
+      options: ['无异常', '有异常（见备注）'],
+      placeholder: '请选择' },
+    { key: 'note', label: '备注/详情', type: 'textarea', placeholder: '如有异常请详细说明，无异常可填"无"' },
+  ];
+
+  if (company.includes('酒店') || company.includes('假日') || company.includes('亚朵')) {
+    return [
+      { key: 'occupancyToday', label: '今日预计入住量（间）', type: 'number', required: true, placeholder: '请输入数字' },
+      { key: 'checkIn', label: '实际入住（间）', type: 'number', placeholder: '请输入数字' },
+      { key: 'revenue', label: '当日营收（元）', type: 'number', placeholder: '请输入数字（商业机密）' },
+      { key: 'waterUsage', label: '用水量（吨）', type: 'number', placeholder: '' },
+      { key: 'electricUsage', label: '用电量（度）', type: 'number', placeholder: '' },
+      { key: 'gasUsage', label: '用气量（立方）', type: 'number', placeholder: '' },
+      { key: 'maintenanceIssues', label: '维修故障/原因', type: 'textarea', placeholder: '无故障填"无"' },
+      { key: 'guestRating', label: '旅客评分', type: 'text', placeholder: '如：4.8' },
+      ...base,
+    ];
+  }
+
+  if (company.includes('洗衣')) {
+    return [
+      { key: 'washStatus', label: '洗衣机运营情况', type: 'select', options: ['正常运营', '未运营', '部分故障'], required: true },
+      { key: 'machineCount', label: '在运机台数', type: 'number', placeholder: '' },
+      { key: 'electricUsage', label: '用电量（度）', type: 'number', placeholder: '' },
+      ...base,
+    ];
+  }
+
+  if (company.includes('投资') || company.includes('工地') || company.includes('施工')) {
+    return [
+      { key: 'workers', label: '施工人数', type: 'text', required: true, placeholder: '如：安装施工人员26名' },
+      { key: 'progress', label: '今日施工进度', type: 'textarea', required: true, placeholder: '简述今日施工内容' },
+      { key: 'safetyCheck', label: '安全巡查情况', type: 'textarea', placeholder: '施工作业人员、施工记录等' },
+      { key: 'electricUsage', label: '楼层用电（kwh）', type: 'number', placeholder: '' },
+      ...base,
+    ];
+  }
+
+  if (company.includes('商贸') || company.includes('商品')) {
+    return [
+      { key: 'inventory', label: '主要库存商品', type: 'textarea', required: true, placeholder: '如：昨日铺设200米路砖' },
+      { key: 'sales', label: '今日销售/进展', type: 'textarea', placeholder: '' },
+      ...base,
+    ];
+  }
+
+  if (company.includes('轮胎')) {
+    return [
+      { key: 'production', label: '今日生产情况', type: 'textarea', required: true, placeholder: '如：矿山轮胎生产45条' },
+      { key: 'inventory', label: '库存转运', type: 'select', options: ['正常', '异常'], placeholder: '' },
+      ...base,
+    ];
+  }
+
+  // 默认字段
+  return [
+    { key: 'status', label: '今日运营状态', type: 'select', required: true,
+      options: ['正常运营', '部分异常', '停运'] },
+    { key: 'electricUsage', label: '用电量（kwh）', type: 'number', placeholder: '' },
+    { key: 'mainContent', label: '今日主要内容', type: 'textarea', required: true, placeholder: '请填写今日主要运营情况' },
+    ...base,
+  ];
+}
+
+function renderFormField(f, existing) {
+  const val = existing?.[f.key] ?? '';
+  const req = f.required ? '<span class="required">*必填</span>' : '';
+  if (f.type === 'textarea') {
+    return `
+      <div class="form-item">
+        <div class="form-label">${f.label} ${req}</div>
+        <textarea class="form-textarea" id="field_${f.key}" placeholder="${f.placeholder||''}">${val}</textarea>
+      </div>`;
+  }
+  if (f.type === 'select') {
+    const opts = (f.options||[]).map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+    return `
+      <div class="form-item">
+        <div class="form-label">${f.label} ${req}</div>
+        <select class="form-select" id="field_${f.key}">
+          <option value="">请选择</option>${opts}
+        </select>
+      </div>`;
+  }
+  return `
+    <div class="form-item">
+      <div class="form-label">${f.label} ${req}</div>
+      <input type="${f.type||'text'}" class="form-input" id="field_${f.key}" value="${val}" placeholder="${f.placeholder||''}">
+    </div>`;
+}
+
+async function submitReport() {
+  const company = state.user.company;
+  const fields = getCompanyFields(company);
+  const data = {};
+  for (const f of fields) {
+    const el = document.getElementById('field_' + f.key);
+    if (el) {
+      const v = el.value.trim();
+      if (f.required && !v) { toast('请填写：' + f.label); el.focus(); return; }
+      data[f.key] = v;
+    }
+  }
+  const res = await api('POST', '/api/report', { date: todayStr(), data });
+  if (res.ok) {
+    toast('✅ 报送成功！');
+    renderSubmitPage();
+  } else {
+    toast(res.error || '报送失败，请重试');
+  }
+}
+
+// ════════════════════════════════════════════════
+// 页面：报送员 - 我的历史记录
+// ════════════════════════════════════════════════
+async function renderHistoryPage() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+  const res = await api('GET', '/api/report/mine?date=' + todayStr());
+  const report = res.report;
+  main.innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>今日报送记录</div>
+      ${report ? renderReportDetail(report) : '<div class="empty"><span class="empty-icon">📋</span><p>今日尚未报送</p></div>'}
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>提示</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.8">
+        · 每日17:00前请完成信息报送<br>
+        · 如需修改，请返回"填报信息"页面更新<br>
+        · 您只能查看本公司（<strong>${state.user.company}</strong>）的报送信息<br>
+        · 如有疑问，请联系值班长
+      </p>
+    </div>
+  `;
+}
+
+function renderReportDetail(report) {
+  const skip = ['company','reporter','reporterPhone','reporterId','submittedAt'];
+  const fieldLabels = {
+    occupancyToday:'预计入住',checkIn:'实际入住',revenue:'当日营收',
+    waterUsage:'用水量',electricUsage:'用电量',gasUsage:'用气量',
+    maintenanceIssues:'维修情况',guestRating:'旅客评分',
+    washStatus:'洗衣机状态',machineCount:'在运机台',
+    workers:'施工人数',progress:'施工进度',safetyCheck:'安全巡查',
+    inventory:'库存/今日内容',sales:'销售进展',production:'生产情况',
+    status:'运营状态',mainContent:'今日主要内容',
+    abnormal:'异常情况',note:'备注',
+  };
+  const entries = Object.entries(report).filter(([k]) => !skip.includes(k) && report[k]);
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      ${entries.map(([k,v],i) => `
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border);${i%2===0?'border-right:1px solid var(--border)':''};">
+          <div style="font-size:11px;color:var(--text2)">${fieldLabels[k]||k}</div>
+          <div style="font-size:13px;margin-top:3px;word-break:break-all;${v==='有异常（见备注）'||v==='部分故障'?'color:var(--red);font-weight:500':''}${v==='无异常'||v==='正常运营'?'color:var(--green)':''}">${v}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="font-size:12px;color:#999;margin-top:8px;text-align:right">提交时间：${formatTime(report.submittedAt)}</div>
+  `;
+}
+
+// ════════════════════════════════════════════════
+// 页面：值班长/管理员 - 日报总览
+// ════════════════════════════════════════════════
+async function renderOverviewPage() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+  const res = await api('GET', '/api/report/all?date=' + state.currentDate);
+  if (!res.ok) { main.innerHTML = `<div class="empty"><span class="empty-icon">⚠️</span><p>${res.error}</p></div>`; return; }
+
+  const { reports, companies } = res;
+  const submitted = companies.filter(c => reports[c]);
+  const pending = companies.filter(c => !reports[c]);
+  const pct = companies.length ? Math.round(submitted.length / companies.length * 100) : 0;
+
+  main.innerHTML = `
+    <div class="report-header">
+      <h2>☁️ 云监控调度平台日报</h2>
+      <p>${state.currentDate} &nbsp;|&nbsp; 值班长：${state.user.name}</p>
+    </div>
+
+    <div class="card no-print">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="card-title" style="margin:0"><span class="dot"></span>报送进度</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="dateInput" value="${state.currentDate}" class="form-input" style="width:auto;height:34px;font-size:13px;padding:0 10px" onchange="changeDate(this.value)">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px">
+        <span>已报送 <strong style="color:var(--green)">${submitted.length}</strong> 家</span>
+        <span>待报送 <strong style="color:var(--orange)">${pending.length}</strong> 家</span>
+        <span>合计 <strong>${companies.length}</strong> 家</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="text-align:right;font-size:12px;color:var(--text2);margin-top:4px">${pct}%</div>
+      ${pending.length > 0 ? `<div style="margin-top:10px;font-size:13px;color:var(--orange)">⏳ 未报送：${pending.join('、')}</div>` : `<div style="margin-top:10px;font-size:13px;color:var(--green)">✅ 全部公司已完成报送</div>`}
+    </div>
+
+    <div class="card no-print">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="printReport()">🖨️ 截图/打印日报</button>
+        <button class="btn btn-default btn-sm" onclick="copyReportText()">📋 复制文字版</button>
+      </div>
+    </div>
+
+    <div id="reportContent">
+      ${companies.map(c => renderCompanyCard(c, reports[c])).join('')}
+    </div>
+  `;
+}
+
+function changeDate(date) {
+  state.currentDate = date;
+  renderOverviewPage();
+}
+
+function renderCompanyCard(company, report) {
+  if (!report) {
+    return `
+      <div class="company-card">
+        <div class="company-header" style="background:linear-gradient(90deg,#999,#bbb)">
+          <div class="company-name">${company}</div>
+          <span class="tag tag-gray" style="background:rgba(255,255,255,.2);color:#fff">⏳ 未报送</span>
+        </div>
+        <div style="padding:16px;text-align:center;color:#999;font-size:13px">今日尚未报送</div>
+      </div>`;
+  }
+
+  const skip = ['company','reporter','reporterPhone','reporterId','submittedAt'];
+  const fieldLabels = {
+    occupancyToday:'预计入住(间)',checkIn:'实际入住(间)',revenue:'当日营收(元)',
+    waterUsage:'用水量(吨)',electricUsage:'用电量(kwh/度)',gasUsage:'用气(立方)',
+    maintenanceIssues:'维修情况',guestRating:'旅客评分',
+    washStatus:'洗衣机状态',machineCount:'在运机台',
+    workers:'施工人数',progress:'施工进度',safetyCheck:'安全巡查',
+    inventory:'库存/内容',sales:'销售进展',production:'生产情况',
+    status:'运营状态',mainContent:'今日内容',
+    abnormal:'异常情况',note:'备注',
+  };
+
+  const hasAbnormal = report.abnormal === '有异常（见备注）' || report.abnormal === '部分故障';
+  const entries = Object.entries(report).filter(([k]) => !skip.includes(k) && report[k]);
+
+  return `
+    <div class="company-card">
+      <div class="company-header">
+        <div>
+          <div class="company-name">${company}</div>
+          <div class="company-meta">报送员：${report.reporter} ${report.reporterPhone ? '· '+report.reporterPhone : ''}</div>
+        </div>
+        <span class="tag" style="background:rgba(255,255,255,.2);color:#fff;${hasAbnormal?'background:rgba(250,81,81,.4)':''}">
+          ${hasAbnormal ? '⚠️ 有异常' : '✅ 无异常'}
+        </span>
+      </div>
+      <div class="info-grid">
+        ${entries.map(([k,v], i) => {
+          const isAbnormal = v === '有异常（见备注）' || v === '部分故障' || v === '有异常';
+          const isGood = v === '无异常' || v === '正常运营' || v === '正常';
+          const isFullWidth = (k === 'note' || k === 'mainContent' || k === 'progress' || k === 'safetyCheck' || k === 'maintenanceIssues');
+          return `<div class="info-item ${isFullWidth?'full-width':''}">
+            <div class="info-key">${fieldLabels[k]||k}</div>
+            <div class="info-val ${isAbnormal?'abnormal':''}" style="${isGood?'color:var(--green)':''}">${v}</div>
+          </div>`;
+        }).join('')}
+        <div class="info-item full-width" style="border-bottom:none">
+          <div class="info-key">报送时间</div>
+          <div class="info-val">${formatTime(report.submittedAt)}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function printReport() {
+  window.print();
+}
+
+function copyReportText() {
+  const content = document.getElementById('reportContent');
+  if (!content) return;
+  let text = `云监控调度平台日报\n日期：${state.currentDate}\n值班长：${state.user.name}\n${'─'.repeat(30)}\n\n`;
+  const cards = content.querySelectorAll('.company-card');
+  cards.forEach(card => {
+    const name = card.querySelector('.company-name')?.textContent || '';
+    const meta = card.querySelector('.company-meta')?.textContent || '';
+    text += `【${name}】${meta}\n`;
+    card.querySelectorAll('.info-item').forEach(item => {
+      const k = item.querySelector('.info-key')?.textContent || '';
+      const v = item.querySelector('.info-val')?.textContent || '';
+      if (k && v) text += `  ${k}：${v}\n`;
+    });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(() => toast('✅ 已复制到剪贴板，可粘贴到微信群'));
+}
+
+// ════════════════════════════════════════════════
+// 页面：历史记录（管理员）
+// ════════════════════════════════════════════════
+async function renderDailyPage() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+  const res = await api('GET', '/api/report/dates');
+  const dates = res.dates || [];
+  main.innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>历史日报列表</div>
+      ${dates.length === 0 ? '<div class="empty"><span class="empty-icon">📅</span><p>暂无历史记录</p></div>' : ''}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${dates.map(d => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--gray);border-radius:8px;cursor:pointer" onclick="viewDateReport('${d}')">
+            <div>
+              <div style="font-size:14px;font-weight:500">${d}</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px">${d === todayStr() ? '今日' : ''}</div>
+            </div>
+            <span style="color:var(--blue);font-size:13px">查看 ›</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function viewDateReport(date) {
+  state.currentDate = date;
+  state.currentTab = 'overview';
+  renderTabbar();
+  renderOverviewPage();
+}
+
+// ════════════════════════════════════════════════
+// 页面：账号管理（管理员）
+// ════════════════════════════════════════════════
+async function renderMgmtPage() {
+  if (state.user.role !== 'admin') {
+    document.getElementById('mainContent').innerHTML = `<div class="empty"><span class="empty-icon">🔒</span><p>仅管理员可访问</p></div>`;
+    return;
+  }
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+  const res = await api('GET', '/api/users');
+  const users = res.users || [];
+  const roleLabel = { admin: '管理员', duty: '值班长', reporter: '报送员' };
+  main.innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>账号列表</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">共 ${users.length} 个账号。点击可重置密码。</div>
+      ${users.map(u => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:14px;font-weight:500">${u.name} <span class="tag ${u.role==='admin'?'tag-info':u.role==='duty'?'tag-success':'tag-gray'}">${roleLabel[u.role]}</span></div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">${u.company} · ${u.username}</div>
+            ${u.phone ? `<div style="font-size:12px;color:var(--text2)">${u.phone}</div>` : ''}
+          </div>
+          <button class="btn btn-default btn-sm" onclick="resetPassword('${u.id}','${u.name}')">重置密码</button>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>默认密码规则</div>
+      <p style="font-size:13px;color:var(--text2);line-height:2">
+        · 报送员初始密码：公司缩写+2024<br>
+        · 值班长初始密码：zyx2024<br>
+        · 管理员密码：zyzlxr2024<br>
+        · 建议首次登录后立即修改密码
+      </p>
+    </div>
+  `;
+}
+
+async function resetPassword(userId, userName) {
+  const newPwd = prompt(`重置 ${userName} 的密码为：`);
+  if (!newPwd) return;
+  if (newPwd.length < 6) return toast('密码至少6位');
+  const res = await api('POST', '/api/users/reset-password', { userId, newPassword: newPwd });
+  toast(res.ok ? `✅ ${userName} 密码已重置` : (res.error || '重置失败'));
+}
+
+// ════════════════════════════════════════════════
+// 页面：设置
+// ════════════════════════════════════════════════
+function renderSettingsPage() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>账号信息</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">姓名</span><span>${state.user.name}</span></div>
+        <div class="divider" style="margin:4px 0"></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">单位</span><span>${state.user.company}</span></div>
+        <div class="divider" style="margin:4px 0"></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">角色</span><span>${state.user.role==='admin'?'管理员':state.user.role==='duty'?'值班长':'报送员'}</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>修改密码</div>
+      <div class="form-item">
+        <div class="form-label">原密码</div>
+        <input type="password" id="oldPwd" class="form-input" placeholder="请输入原密码">
+      </div>
+      <div class="form-item">
+        <div class="form-label">新密码</div>
+        <input type="password" id="newPwd" class="form-input" placeholder="至少6位">
+      </div>
+      <div class="form-item">
+        <div class="form-label">确认新密码</div>
+        <input type="password" id="newPwd2" class="form-input" placeholder="再次输入新密码">
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">修改密码</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>使用说明</div>
+      <p style="font-size:13px;color:var(--text2);line-height:2">
+        · 报送员每日17:00前完成填报<br>
+        · 报送信息属商业机密，请勿外传<br>
+        · 报送员只能查看本公司信息<br>
+        · 值班长/管理员可查看所有公司<br>
+        · 技术支持：李晓锐 15141120968
+      </p>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-danger" onclick="doLogout()">退出登录</button>
+    </div>
+  `;
+}
+
+async function changePassword() {
+  const old = document.getElementById('oldPwd').value;
+  const n1 = document.getElementById('newPwd').value;
+  const n2 = document.getElementById('newPwd2').value;
+  if (!old || !n1 || !n2) return toast('请填写所有字段');
+  if (n1 !== n2) return toast('两次新密码不一致');
+  if (n1.length < 6) return toast('新密码至少6位');
+  const res = await api('POST', '/api/change-password', { oldPassword: old, newPassword: n1 });
+  toast(res.ok ? '✅ 密码修改成功' : (res.msg || '修改失败'));
+}
+
+// ════════════════════════════════════════════════
+// 工具
+// ════════════════════════════════════════════════
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════════════
+// 启动
+// ════════════════════════════════════════════════
+checkLogin();
+</script>
+</body>
+</html>
