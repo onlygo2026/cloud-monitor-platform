@@ -61,8 +61,7 @@ function initUsers() {
     { id: 'u103', username: 'zhixuan',  password: hash('zx2026'),   name: '李颖',   role: 'reporter', company: '智选假日酒店',       phone: '' },
     { id: 'u104', username: 'yaduo',    password: hash('yd2026'),   name: '于秀丽', role: 'reporter', company: '亚朵酒店',           phone: '' },
     { id: 'u105', username: 'jiancai',  password: hash('jc2026'),   name: '傅建华', role: 'reporter', company: '尊远建材',           phone: '' },
-    { id: 'u106', username: 'sifangda', password: hash('sfd2026'),  name: '张君',   role: 'reporter', company: '辽宁思方达',         phone: '' },
-    { id: 'u107', username: 'jlsfd',   password: hash('sfd2026'),  name: '（待定）', role: 'reporter', company: '吉林思方达',         phone: '' },
+    { id: 'u106', username: 'sifangda', password: hash('sfd2026'),  name: '张君',   role: 'reporter', company: '思方达',         phone: '' },
   ];
   saveJSON(USERS_FILE, users);
 }
