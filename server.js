@@ -51,7 +51,7 @@ function initUsers() {
   if (fs.existsSync(USERS_FILE)) return;
   const users = [
     // 轮值值班长（尊远投资）
-    { id: 'u001', username: 'chouzw',   password: hash('zytz2026'), name: '丑子文', role: 'admin', company: '尊远投资',          phone: '' },
+    { id: 'u001', username: 'chouzw',   password: hash('zytz2026'), name: '丑子文', role: 'duty',  company: '尊远投资',          phone: '' },
     { id: 'u002', username: 'lixr',     password: hash('zytz2026'), name: '李晓锐', role: 'admin', company: '尊远投资',          phone: '15141120968' },
     { id: 'u003', username: 'fanjw',    password: hash('zytz2026'), name: '范家玮', role: 'duty',  company: '尊远投资',          phone: '' },
     { id: 'u004', username: 'yinyf',    password: hash('zytz2026'), name: '尹宜凡', role: 'duty',  company: '尊远投资',          phone: '' },
