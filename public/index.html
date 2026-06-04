@@ -438,11 +438,13 @@ function getCompanyFields(company) {
     ];
   }
 
-  // ═══ 辽宁思方达 / 吉林思方达：2项 ═══
+  // ═══ 思方达（辽宁+吉林）：4项 ═══
   if (company.includes('思方达')) {
     return [
-      { key: 'sales', label: '销售情况', type: 'textarea', required: true, placeholder: '请填写销售情况' },
-      { key: 'inbound', label: '入库情况', type: 'textarea', required: true, placeholder: '请填写入库情况' },
+      { key: 'ln_sales', label: '辽宁销售情况', type: 'textarea', required: true, placeholder: '请填写辽宁地区销售情况' },
+      { key: 'ln_inbound', label: '辽宁入库情况', type: 'textarea', required: true, placeholder: '请填写辽宁地区入库情况' },
+      { key: 'jl_sales', label: '吉林销售情况', type: 'textarea', required: true, placeholder: '请填写吉林地区销售情况' },
+      { key: 'jl_inbound', label: '吉林入库情况', type: 'textarea', required: true, placeholder: '请填写吉林地区入库情况' },
       ...base,
     ];
   }
@@ -541,8 +543,10 @@ function renderReportDetail(report) {
     // 尊远建材
     outbound:'当日商品出库情况', safety_jc:'安全情况',
     // 思方达
-    sales:'销售情况', inbound:'入库情况',
+    ln_sales:'辽宁销售情况', ln_inbound:'辽宁入库情况',
+    jl_sales:'吉林销售情况', jl_inbound:'吉林入库情况',
     // 旧字段（历史兼容）
+    sales:'销售情况', inbound:'入库情况',
     occupancyToday:'预计入住(间)',checkIn:'实际入住(间)',revenue:'当日营收(元)',
     waterUsage:'用水量(吨)',electricUsage:'用电量(度)',gasUsage:'用气量(立方)',
     maintenanceIssues:'维修情况',guestRating:'旅客评分',
@@ -644,8 +648,10 @@ function renderCompanyCard(company, report) {
     // 尊远建材
     outbound:'当日商品出库情况', safety_jc:'安全情况',
     // 思方达
-    sales:'销售情况', inbound:'入库情况',
+    ln_sales:'辽宁销售情况', ln_inbound:'辽宁入库情况',
+    jl_sales:'吉林销售情况', jl_inbound:'吉林入库情况',
     // 旧字段（历史兼容）
+    sales:'销售情况', inbound:'入库情况',
     occupancyToday:'预计入住(间)',checkIn:'实际入住(间)',revenue:'当日营收(元)',
     waterUsage:'用水量(吨)',electricUsage:'用电量(kwh/度)',gasUsage:'用气(立方)',
     maintenanceIssues:'维修情况',guestRating:'旅客评分',
