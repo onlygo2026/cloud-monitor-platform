@@ -407,60 +407,50 @@ function getCompanyFields(company) {
     { key: 'note', label: '备注/详情', type: 'textarea', placeholder: '如有异常请详细说明，无异常可填"无"' },
   ];
 
-  if (company.includes('酒店') || company.includes('假日') || company.includes('亚朵')) {
+  // ═══ 海尊酒店：4项 ═══
+  if (company.includes('海尊')) {
     return [
-      { key: 'occupancyToday', label: '今日预计入住量（间）', type: 'number', required: true, placeholder: '请输入数字' },
-      { key: 'checkIn', label: '实际入住（间）', type: 'number', placeholder: '请输入数字' },
-      { key: 'revenue', label: '当日营收（元）', type: 'number', placeholder: '请输入数字（商业机密）' },
-      { key: 'waterUsage', label: '用水量（吨）', type: 'number', placeholder: '' },
-      { key: 'electricUsage', label: '用电量（度）', type: 'number', placeholder: '' },
-      { key: 'gasUsage', label: '用气量（立方）', type: 'number', placeholder: '' },
-      { key: 'maintenanceIssues', label: '维修故障/原因', type: 'textarea', placeholder: '无故障填"无"' },
-      { key: 'guestRating', label: '旅客评分', type: 'text', placeholder: '如：4.8' },
+      { key: 'zhixuan50_site', label: '智选5.0改造施工现场', type: 'textarea', required: true, placeholder: '请填写今日智选5.0改造施工情况' },
+      { key: 'yaduo36_site', label: '亚朵3.6改造施工现场', type: 'textarea', required: true, placeholder: '请填写今日亚朵3.6改造施工情况' },
+      { key: 'building_energy', label: '大楼当日能源消耗情况', type: 'textarea', required: true, placeholder: '水、电、天然气等消耗数据' },
+      { key: 'safety', label: '安全生产情况', type: 'textarea', required: true, placeholder: '请填写今日安全生产巡查情况' },
       ...base,
     ];
   }
 
-  if (company.includes('洗衣')) {
+  // ═══ 中山希尔顿欢朋酒店 / 智选假日酒店 / 亚朵酒店：4项 ═══
+  if (company.includes('欢朋') || company.includes('假日') || company.includes('亚朵')) {
     return [
-      { key: 'washStatus', label: '洗衣机运营情况', type: 'select', options: ['正常运营', '未运营', '部分故障'], required: true },
-      { key: 'machineCount', label: '在运机台数', type: 'number', placeholder: '' },
-      { key: 'electricUsage', label: '用电量（度）', type: 'number', placeholder: '' },
+      { key: 'room_sales', label: '当日客房销售量（含预估）', type: 'text', required: true, placeholder: '请填写当日客房销售数量及预估' },
+      { key: 'energy', label: '当日能源消耗情况：水、电、天然气', type: 'textarea', required: true, placeholder: '水___吨、电___度、天然气___立方' },
+      { key: 'maintenance', label: '维修房数量及问题原因', type: 'textarea', required: true, placeholder: '请填写维修房间数量及具体问题原因' },
+      { key: 'ctrip_score', label: '携程网评', type: 'text', required: true, placeholder: '请填写当日携程分数，如：4.8' },
       ...base,
     ];
   }
 
-  if (company.includes('投资') || company.includes('工地') || company.includes('施工')) {
+  // ═══ 尊远建材：2项 ═══
+  if (company.includes('建材')) {
     return [
-      { key: 'workers', label: '施工人数', type: 'text', required: true, placeholder: '如：安装施工人员26名' },
-      { key: 'progress', label: '今日施工进度', type: 'textarea', required: true, placeholder: '简述今日施工内容' },
-      { key: 'safetyCheck', label: '安全巡查情况', type: 'textarea', placeholder: '施工作业人员、施工记录等' },
-      { key: 'electricUsage', label: '楼层用电（kwh）', type: 'number', placeholder: '' },
+      { key: 'outbound', label: '当日商品出库情况', type: 'textarea', required: true, placeholder: '请填写商品出库情况' },
+      { key: 'safety_jc', label: '安全情况', type: 'textarea', required: true, placeholder: '请填写安全生产情况' },
       ...base,
     ];
   }
 
-  if (company.includes('商贸') || company.includes('商品')) {
+  // ═══ 辽宁思方达 / 吉林思方达：2项 ═══
+  if (company.includes('思方达')) {
     return [
-      { key: 'inventory', label: '主要库存商品', type: 'textarea', required: true, placeholder: '如：昨日铺设200米路砖' },
-      { key: 'sales', label: '今日销售/进展', type: 'textarea', placeholder: '' },
+      { key: 'sales', label: '销售情况', type: 'textarea', required: true, placeholder: '请填写销售情况' },
+      { key: 'inbound', label: '入库情况', type: 'textarea', required: true, placeholder: '请填写入库情况' },
       ...base,
     ];
   }
 
-  if (company.includes('轮胎')) {
-    return [
-      { key: 'production', label: '今日生产情况', type: 'textarea', required: true, placeholder: '如：矿山轮胎生产45条' },
-      { key: 'inventory', label: '库存转运', type: 'select', options: ['正常', '异常'], placeholder: '' },
-      ...base,
-    ];
-  }
-
-  // 默认字段
+  // 默认字段（兜底）
   return [
     { key: 'status', label: '今日运营状态', type: 'select', required: true,
       options: ['正常运营', '部分异常', '停运'] },
-    { key: 'electricUsage', label: '用电量（kwh）', type: 'number', placeholder: '' },
     { key: 'mainContent', label: '今日主要内容', type: 'textarea', required: true, placeholder: '请填写今日主要运营情况' },
     ...base,
   ];
@@ -542,12 +532,23 @@ async function renderHistoryPage() {
 function renderReportDetail(report) {
   const skip = ['company','reporter','reporterPhone','reporterId','submittedAt'];
   const fieldLabels = {
-    occupancyToday:'预计入住',checkIn:'实际入住',revenue:'当日营收',
-    waterUsage:'用水量',electricUsage:'用电量',gasUsage:'用气量',
+    // 海尊酒店
+    zhixuan50_site:'智选5.0改造施工现场', yaduo36_site:'亚朵3.6改造施工现场',
+    building_energy:'大楼当日能源消耗情况', safety:'安全生产情况',
+    // 希尔顿欢朋/智选假日/亚朵
+    room_sales:'当日客房销售量', energy:'能源消耗情况(水/电/气)',
+    maintenance:'维修房数量及问题原因', ctrip_score:'携程网评',
+    // 尊远建材
+    outbound:'当日商品出库情况', safety_jc:'安全情况',
+    // 思方达
+    sales:'销售情况', inbound:'入库情况',
+    // 旧字段（历史兼容）
+    occupancyToday:'预计入住(间)',checkIn:'实际入住(间)',revenue:'当日营收(元)',
+    waterUsage:'用水量(吨)',electricUsage:'用电量(度)',gasUsage:'用气量(立方)',
     maintenanceIssues:'维修情况',guestRating:'旅客评分',
-    washStatus:'洗衣机状态',machineCount:'在运机台',
+    washStatus:'洗衣机状态',machineCount:'在运机台(台)',
     workers:'施工人数',progress:'施工进度',safetyCheck:'安全巡查',
-    inventory:'库存/今日内容',sales:'销售进展',production:'生产情况',
+    inventory:'库存/今日内容',production:'生产情况',
     status:'运营状态',mainContent:'今日主要内容',
     abnormal:'异常情况',note:'备注',
   };
@@ -634,12 +635,23 @@ function renderCompanyCard(company, report) {
 
   const skip = ['company','reporter','reporterPhone','reporterId','submittedAt'];
   const fieldLabels = {
+    // 海尊酒店
+    zhixuan50_site:'智选5.0改造施工现场', yaduo36_site:'亚朵3.6改造施工现场',
+    building_energy:'大楼当日能源消耗情况', safety:'安全生产情况',
+    // 希尔顿欢朋/智选假日/亚朵
+    room_sales:'当日客房销售量', energy:'能源消耗情况(水/电/气)',
+    maintenance:'维修房数量及问题原因', ctrip_score:'携程网评',
+    // 尊远建材
+    outbound:'当日商品出库情况', safety_jc:'安全情况',
+    // 思方达
+    sales:'销售情况', inbound:'入库情况',
+    // 旧字段（历史兼容）
     occupancyToday:'预计入住(间)',checkIn:'实际入住(间)',revenue:'当日营收(元)',
     waterUsage:'用水量(吨)',electricUsage:'用电量(kwh/度)',gasUsage:'用气(立方)',
     maintenanceIssues:'维修情况',guestRating:'旅客评分',
-    washStatus:'洗衣机状态',machineCount:'在运机台',
+    washStatus:'洗衣机状态',machineCount:'在运机台(台)',
     workers:'施工人数',progress:'施工进度',safetyCheck:'安全巡查',
-    inventory:'库存/内容',sales:'销售进展',production:'生产情况',
+    inventory:'库存/内容',production:'生产情况',
     status:'运营状态',mainContent:'今日内容',
     abnormal:'异常情况',note:'备注',
   };
