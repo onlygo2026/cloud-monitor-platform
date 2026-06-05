@@ -609,9 +609,10 @@ async function renderOverviewPage() {
 
     <div class="card no-print">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="printReport()">🖨️ 截图/打印日报</button>
+        <button class="btn btn-success btn-sm" onclick="openPrintView()" style="background:#07c160;color:#fff;">📄 生成打印版日报</button>
         <button class="btn btn-default btn-sm" onclick="copyReportText()">📋 复制文字版</button>
       </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px;">💡 点"生成打印版日报"可截图发微信群，或直接保存为PDF</div>
     </div>
 
     <div id="reportContent">
@@ -695,7 +696,13 @@ function renderCompanyCard(company, report) {
 }
 
 function printReport() {
-  window.print();
+  openPrintView();
+}
+
+function openPrintView() {
+  // 在新标签页打开日报打印视图，传入当前日期
+  const url = '/daily-report.html?date=' + (state.currentDate || todayStr());
+  window.open(url, '_blank');
 }
 
 function copyReportText() {
