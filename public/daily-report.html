@@ -221,7 +221,7 @@ body{
 <script>
 // ── 工具 ──
 function getToken() {
-  return localStorage.getItem('cloud_monitor_token') || sessionStorage.getItem('cloud_monitor_token') || '';
+  return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
 }
 
 async function api(method, url, body) {
