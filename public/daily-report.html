@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>云监控调度平台 · 日报</title>
+<style>
+/* ── 基础 ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'PingFang SC','Helvetica Neue','Microsoft YaHei',Arial,sans-serif;
+  background:#f0f2f5;
+  color:#1a1a1a;
+  font-size:13px;
+}
+
+/* ── 操作栏（打印时隐藏）── */
+.toolbar{
+  background:#1677ff;color:#fff;
+  padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;
+}
+.toolbar .title-area{display:flex;align-items:center;gap:8px;}
+.toolbar .title-area span{font-size:15px;font-weight:600;}
+.toolbar .btn-group{display:flex;gap:8px;}
+.btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 14px;border-radius:6px;border:none;
+  font-size:13px;cursor:pointer;font-weight:500;
+}
+.btn-white{background:#fff;color:#1677ff;}
+.btn-white:active{opacity:.85;}
+.btn-green{background:#07c160;color:#fff;}
+.btn-green:active{opacity:.85;}
+
+/* ── 日报容器 ── */
+#reportWrap{
+  padding:12px;
+  max-width:780px;
+  margin:0 auto;
+}
+
+/* ── 日报头部 ── */
+.report-head{
+  background:linear-gradient(135deg,#145abd 0%,#1677ff 100%);
+  color:#fff;
+  border-radius:10px 10px 0 0;
+  padding:14px 18px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.report-head-left .main-title{
+  font-size:18px;font-weight:700;letter-spacing:.5px;
+}
+.report-head-left .sub-title{
+  font-size:12px;opacity:.85;margin-top:3px;
+}
+.report-head-right{
+  text-align:right;font-size:12px;opacity:.9;line-height:1.8;
+}
+.report-head-right strong{font-size:14px;font-weight:600;}
+
+/* ── 汇总统计栏 ── */
+.stat-bar{
+  background:#e8f4e8;
+  border-left:4px solid #07c160;
+  padding:8px 14px;
+  font-size:13px;
+  display:flex;align-items:center;gap:16px;
+  flex-wrap:wrap;
+}
+.stat-bar.warn{background:#fff7e6;border-color:#fa8c16;}
+.stat-item{display:flex;align-items:center;gap:4px;}
+.stat-item .label{color:#666;}
+.stat-item .val-green{color:#07c160;font-weight:600;}
+.stat-item .val-orange{color:#fa8c16;font-weight:600;}
+.stat-item .val-red{color:#fa5151;font-weight:600;}
+
+/* ── 主表格 ── */
+.report-table{
+  width:100%;
+  border-collapse:collapse;
+  border:1px solid #c3d9b0;
+  background:#fff;
+}
+.report-table th{
+  background:#3a7d32;
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+  padding:8px 10px;
+  text-align:center;
+  border:1px solid #2d6128;
+  white-space:nowrap;
+}
+.report-table td{
+  padding:8px 10px;
+  border:1px solid #d4e8c2;
+  vertical-align:top;
+  font-size:12px;
+  line-height:1.55;
+}
+/* 序号列 */
+.col-no{width:28px;text-align:center;color:#888;font-size:11px;}
+/* 单位列 */
+.col-co{width:108px;font-weight:600;color:#145abd;font-size:12px;}
+/* 监控情况列（宽） */
+.col-info{color:#333;}
+/* 状态列 */
+.col-status{width:72px;text-align:center;font-size:12px;}
+
+/* 奇偶行背景 */
+.report-table tbody tr:nth-child(odd) td{background:#f7fbf3;}
+.report-table tbody tr:nth-child(even) td{background:#fff;}
+
+/* 未报送行 */
+.row-pending td{background:#fff8f0!important;color:#999;}
+.row-pending .col-co{color:#ccc!important;}
+.row-pending .col-info{font-style:italic;color:#bbb!important;}
+
+/* 状态标签 */
+.tag-ok{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#e6f7ee;color:#07c160;font-weight:600;font-size:11px;
+}
+.tag-warn{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#fff2e8;color:#fa8c16;font-weight:600;font-size:11px;
+}
+.tag-pending{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#f5f5f5;color:#bbb;font-weight:400;font-size:11px;
+}
+
+/* 监控详情块 */
+.info-block{margin-bottom:5px;display:flex;gap:4px;align-items:baseline;}
+.info-block:last-child{margin-bottom:0;}
+.info-block .ib-key{
+  flex-shrink:0;color:#3a7d32;font-weight:600;font-size:11px;
+  min-width:80px;
+}
+.info-block .ib-val{color:#1a1a1a;word-break:break-all;}
+.info-block .ib-val.abnormal{color:#fa5151;font-weight:600;}
+
+/* ── 表格底部 ── */
+.report-foot{
+  background:#3a7d32;color:#fff;
+  padding:7px 14px;
+  font-size:11px;
+  border-radius:0 0 10px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  opacity:.9;
+}
+
+/* ── 空态 ── */
+.empty-state{
+  padding:40px;text-align:center;
+  color:#999;font-size:14px;
+  background:#fff;border-radius:0 0 10px 10px;
+}
+
+/* ── 加载态 ── */
+.loading-state{
+  padding:40px;text-align:center;color:#666;
+  background:#fff;border-radius:0 0 10px 10px;
+}
+.spinner{
+  width:28px;height:28px;border:3px solid #e0e0e0;
+  border-top-color:#1677ff;border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── 错误提示 ── */
+.error-state{
+  padding:24px;background:#fff7f7;border-radius:0 0 10px 10px;
+  color:#fa5151;text-align:center;font-size:14px;
+}
+.error-state a{color:#1677ff;text-decoration:underline;cursor:pointer;}
+
+/* ═══ 打印样式 ═══ */
+@media print {
+  body{background:#fff!important;}
+  .toolbar{display:none!important;}
+  #reportWrap{padding:0;max-width:100%;}
+  .report-head{border-radius:0!important;}
+  .report-foot{border-radius:0!important;}
+  .report-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .report-table td{font-size:11px!important;padding:6px 8px!important;}
+  .report-head,.stat-bar,.report-foot{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  @page{
+    margin:8mm 6mm;
+    size:A4 portrait;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 操作栏 -->
+<div class="toolbar" id="toolbar">
+  <div class="title-area">
+    <span>📊 日报打印视图</span>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-white" onclick="window.close()">← 返回</button>
+    <button class="btn btn-green" onclick="doPrint()">🖨️ 打印 / 保存PDF</button>
+  </div>
+</div>
+
+<div id="reportWrap">
+  <div id="reportContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>正在加载日报数据...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 工具 ──
+function getToken() {
+  return localStorage.getItem('cloud_monitor_token') || sessionStorage.getItem('cloud_monitor_token') || '';
+}
+
+async function api(method, url, body) {
+  const token = getToken();
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Token': token,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: '网络错误：' + e.message };
+  }
+}
+
+function todayStr() {
+  const d = new Date();
+  const tz = d.getTime() + d.getTimezoneOffset() * 60000 + 8 * 3600000;
+  const t = new Date(tz);
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+
+function formatDate(str) {
+  // 2026-06-05 → 2026年06月05日
+  if (!str) return '';
+  const parts = str.split('-');
+  if (parts.length === 3) return `${parts[0]}年${parts[1]}月${parts[2]}日`;
+  return str;
+}
+
+function weekdayStr(dateStr) {
+  if (!dateStr) return '';
+  const days = ['日','一','二','三','四','五','六'];
+  const d = new Date(dateStr + 'T00:00:00+08:00');
+  return '星期' + days[d.getDay()];
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  return h + ':' + m;
+}
+
+// ── 字段标签 ──
+const FIELD_LABELS = {
+  // 海尊
+  zhixuan50_site: '智选5.0改造施工现场',
+  yaduo36_site: '亚朵3.6改造施工现场',
+  building_energy: '大楼当日能源消耗',
+  safety: '安全生产情况',
+  // 欢朋/假日/亚朵
+  room_sales: '当日客房销售量(含预估)',
+  energy: '能源消耗(水/电/气)',
+  maintenance: '维修房数量及问题',
+  ctrip_score: '携程网评',
+  // 尊远建材
+  outbound: '当日商品出库情况',
+  safety_jc: '安全情况',
+  // 思方达
+  ln_sales: '辽宁销售情况',
+  ln_inbound: '辽宁入库情况',
+  jl_sales: '吉林销售情况',
+  jl_inbound: '吉林入库情况',
+  // 旧字段
+  sales: '销售情况', inbound: '入库情况',
+  abnormal: '异常情况', note: '备注',
+};
+
+const SKIP_FIELDS = ['company','reporter','reporterPhone','reporterId','submittedAt'];
+
+function getFieldRows(report) {
+  if (!report) return [];
+  return Object.entries(report)
+    .filter(([k]) => !SKIP_FIELDS.includes(k) && report[k] !== undefined && report[k] !== '')
+    .map(([k, v]) => ({ key: k, label: FIELD_LABELS[k] || k, val: v }));
+}
+
+function isAbnormalVal(v) {
+  return typeof v === 'string' && (v.includes('异常') || v.includes('故障') || v.includes('问题'));
+}
+
+function hasAnyAbnormal(report) {
+  if (!report) return false;
+  return Object.entries(report)
+    .filter(([k]) => !SKIP_FIELDS.includes(k))
+    .some(([, v]) => isAbnormalVal(String(v)));
+}
+
+// ── 公司排序（按行业聚类）──
+const COMPANY_ORDER = [
+  '海尊酒店',
+  '中山希尔顿欢朋酒店',
+  '智选假日酒店',
+  '亚朵酒店',
+  '尊远建材',
+  '思方达',
+];
+
+function sortCompanies(companies) {
+  const result = [];
+  COMPANY_ORDER.forEach(c => { if (companies.includes(c)) result.push(c); });
+  companies.forEach(c => { if (!result.includes(c)) result.push(c); });
+  return result;
+}
+
+// ── 监控情况文本（单元格内容）──
+function renderInfoCell(report) {
+  if (!report) return '<span style="color:#bbb;font-style:italic">——</span>';
+  const rows = getFieldRows(report);
+  if (rows.length === 0) return '<span style="color:#bbb;">暂无内容</span>';
+  return rows.map(({ label, val }) => {
+    const isAbnorm = isAbnormalVal(String(val));
+    return `<div class="info-block">
+      <span class="ib-key">${label}：</span>
+      <span class="ib-val${isAbnorm ? ' abnormal' : ''}">${val}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── 渲染整张日报 ──
+function renderReport(date, reports, companies, currentUser) {
+  const sorted = sortCompanies(companies);
+  const submitted = sorted.filter(c => reports[c]);
+  const pending = sorted.filter(c => !reports[c]);
+  const hasWarn = sorted.some(c => hasAnyAbnormal(reports[c]));
+
+  const statClass = (pending.length > 0 || hasWarn) ? 'stat-bar warn' : 'stat-bar';
+
+  let rows = '';
+  sorted.forEach((company, idx) => {
+    const report = reports[company];
+    const abnormal = hasAnyAbnormal(report);
+    const statusTag = !report
+      ? '<span class="tag-pending">⏳ 未报送</span>'
+      : abnormal
+        ? '<span class="tag-warn">⚠️ 异常</span>'
+        : '<span class="tag-ok">✅ 正常</span>';
+
+    const rowClass = !report ? 'row-pending' : '';
+
+    rows += `<tr class="${rowClass}">
+      <td class="col-no">${idx + 1}</td>
+      <td class="col-co">${company}</td>
+      <td class="col-info">${renderInfoCell(report)}</td>
+      <td class="col-status">${statusTag}${report ? `<div style="color:#bbb;font-size:10px;margin-top:4px">${formatTime(report.submittedAt)}</div>` : ''}</td>
+    </tr>`;
+  });
+
+  const pendingText = pending.length > 0
+    ? `<span class="stat-item"><span class="label">⏳ 未报送：</span><span class="val-orange">${pending.join('、')}</span></span>`
+    : `<span class="stat-item"><span class="val-green">✅ 全部已报送</span></span>`;
+
+  const warnText = hasWarn
+    ? `<span class="stat-item"><span class="label">⚠️ 有异常，请关注</span></span>`
+    : '';
+
+  return `
+  <div class="report-head">
+    <div class="report-head-left">
+      <div class="main-title">☁️ 尊远投资 · 云监控调度平台日报</div>
+      <div class="sub-title">大连尊远投资有限公司 · 内部信息报送系统</div>
+    </div>
+    <div class="report-head-right">
+      <div><strong>${formatDate(date)}</strong>　${weekdayStr(date)}</div>
+      <div>值班长：<strong>${currentUser.name}</strong></div>
+      <div>已报送 <strong>${submitted.length}</strong>/${sorted.length} 家</div>
+    </div>
+  </div>
+
+  <div class="${statClass}">
+    <span class="stat-item">
+      <span class="label">报送进度：</span>
+      <span class="val-green">${submitted.length} 家</span>
+      <span class="label"> 已报 / </span>
+      <span class="val-orange">${pending.length} 家</span>
+      <span class="label"> 未报</span>
+    </span>
+    ${pendingText}
+    ${warnText}
+  </div>
+
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th class="col-no">序</th>
+        <th class="col-co">单位</th>
+        <th>监控情况</th>
+        <th class="col-status">状态</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+
+  <div class="report-foot">
+    <span>本日报由系统自动汇总 · 仅供内部使用</span>
+    <span>生成时间：${new Date().toLocaleString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'})}</span>
+  </div>
+  `;
+}
+
+// ── 主流程 ──
+async function loadAndRender() {
+  const container = document.getElementById('reportContainer');
+
+  // 从 URL 参数取日期
+  const params = new URLSearchParams(location.search);
+  const dateParam = params.get('date') || todayStr();
+
+  // 检查登录态
+  const token = getToken();
+  if (!token) {
+    container.innerHTML = `
+      <div class="error-state">
+        <p>⚠️ 请先登录系统</p>
+        <p style="margin-top:8px;font-size:13px;">
+          <a onclick="window.close()">返回登录页</a>
+        </p>
+      </div>`;
+    return;
+  }
+
+  // 获取当前用户
+  const meRes = await api('GET', '/api/me');
+  if (!meRes.ok || !meRes.user) {
+    container.innerHTML = `
+      <div class="error-state">
+        <p>⚠️ 登录已过期，请重新登录</p>
+      </div>`;
+    return;
+  }
+  const currentUser = meRes.user;
+
+  if (currentUser.role === 'reporter') {
+    container.innerHTML = `
+      <div class="error-state">
+        <p>⚠️ 无权限查看日报汇总</p>
+        <p style="margin-top:8px;font-size:13px;">仅值班长/管理员可访问本页面</p>
+      </div>`;
+    return;
+  }
+
+  // 获取日报数据
+  const res = await api('GET', `/api/report/all?date=${dateParam}`);
+  if (!res.ok) {
+    container.innerHTML = `<div class="error-state"><p>⚠️ ${res.error || '加载失败'}</p></div>`;
+    return;
+  }
+
+  const { reports, companies } = res;
+  if (!companies || companies.length === 0) {
+    container.innerHTML = `<div class="empty-state">📋 暂无报送数据</div>`;
+    return;
+  }
+
+  container.innerHTML = renderReport(dateParam, reports, companies, currentUser);
+}
+
+function doPrint() {
+  window.print();
+}
+
+// 启动
+loadAndRender();
+</script>
+</body>
+</html>
